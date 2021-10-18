@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Pol.Notifications;
@@ -61,6 +62,23 @@ public static class PolicyBuilder
         }
         return StandardErrorHandlingPolicyBuilder()
             .WaitAndRetryAsync(retryCount, sleepDurationProvider, OnRetry);
+    }
+
+    public static IAsyncPolicy<HttpResponseMessage> RetryForeverPolicy()
+    {
+        void OnRetry(DelegateResult<HttpResponseMessage> result, int retryAttempt, Context context)
+        {
+            if (result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
+            {
+                return;
+            }
+
+            var mediator = context.GetMediator();
+            mediator?.Publish(new RetryNotification(context, result, retryAttempt));
+        }
+
+        return StandardErrorHandlingPolicyBuilder()
+            .RetryForeverAsync(OnRetry);
     }
 
     public static IAsyncPolicy<HttpResponseMessage> CircuitBreakerPolicy(int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)

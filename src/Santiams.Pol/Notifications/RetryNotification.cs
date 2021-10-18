@@ -14,7 +14,8 @@ public class RetryNotification : INotification
     /// <param name="result"></param>
     /// <param name="retryAttempt"></param>
     /// <param name="ofTotalRetries"></param>
-    public RetryNotification(Context context, DelegateResult<HttpResponseMessage> result, int retryAttempt, int ofTotalRetries, TimeSpan? sleepDuration = null)
+    /// <param name="sleepDuration"></param>
+    public RetryNotification(Context context, DelegateResult<HttpResponseMessage> result, int retryAttempt, int? ofTotalRetries = null, TimeSpan? sleepDuration = null)
     {
         Context = context;
         Result = result;
@@ -26,6 +27,6 @@ public class RetryNotification : INotification
     public Context Context { get; }
     public DelegateResult<HttpResponseMessage> Result { get; }
     public int RetryAttempt { get; }
-    public int OfTotalRetries { get; }
+    public int? OfTotalRetries { get; }
     public TimeSpan? SleepDuration { get; }
 }
