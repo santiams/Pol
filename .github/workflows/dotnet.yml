@@ -15,7 +15,7 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-        source-url: https://nuget.pkg.github.com/santiams/index.json
+        source-url: https://api.nuget.org/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{secrets.POL_NUGET_PACKAGE_KEY}}
     - name: Restore dependencies
@@ -27,4 +27,4 @@ jobs:
     - name: Pack
       run: dotnet pack src/Santiams.Pol/Santiams.Pol.csproj --output nuget-packages --configuration Release
     - name: Push
-      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/santiams/index.json
+      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json
