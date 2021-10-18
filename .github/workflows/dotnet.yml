@@ -17,8 +17,6 @@ jobs:
         dotnet-version: 6.0.x
         include-prerelease: true
         source-url: https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.POL_NUGET_PACKAGE_KEY}}
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -28,4 +26,4 @@ jobs:
     - name: Pack
       run: dotnet pack src/Santiams.Pol/Santiams.Pol.csproj --output nuget-packages --configuration Release
     - name: Push
-      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{secrets.POL_NUGET_PACKAGE_KEY}}
