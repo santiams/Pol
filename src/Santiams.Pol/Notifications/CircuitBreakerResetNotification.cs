@@ -1,8 +1,9 @@
-﻿using Polly;
+﻿using MediatR;
+using Polly;
 
 namespace Pol.Notifications;
 
-public class CircuitBreakerResetNotification
+public class CircuitBreakerResetNotification  : INotification
 {
     public Context Context { get; }
 
