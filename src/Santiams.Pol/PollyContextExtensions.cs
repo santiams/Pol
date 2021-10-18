@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using MediatR;
 using Polly;
 
@@ -12,6 +13,7 @@ public static class PollyContextExtensions
     private static readonly string MediatRKey = "MediatR";
     private static readonly string HttpClientNameKey = "ServiceName";
     private static readonly string RequestUriKey = "RequestUri";
+    private static readonly string RequestKey = "Request";
 
     /// <summary>
     /// Adds an <see cref="IMediator"/> to the <see cref="Context"/>
@@ -45,7 +47,7 @@ public static class PollyContextExtensions
     /// <param name="context">The <see cref="Context"/></param>
     /// <param name="httpClientName">The HttpClient name</param>
     /// <returns>The original <see cref="Context"/></returns>
-    public static Context WithHttpClientName(this Context context, string httpClientName)
+    private static Context WithHttpClientName(this Context context, string httpClientName)
     {
         context[HttpClientNameKey] = httpClientName;
         return context;
@@ -71,7 +73,7 @@ public static class PollyContextExtensions
     /// <param name="context">The <see cref="Context"/></param>
     /// <param name="requestUri">The request Uri</param>
     /// <returns>The original <see cref="Context"/></returns>
-    public static Context WithRequestUri(this Context context, Uri requestUri)
+    private static Context WithRequestUri(this Context context, Uri requestUri)
     {
         context[RequestUriKey] = requestUri;
         return context;
@@ -89,5 +91,51 @@ public static class PollyContextExtensions
             return requestUri as Uri;
         }
         return null;
+    }
+
+    /// <summary>
+    /// The <see cref="HttpRequestMessage"/> that is associated with the <see cref="Context"/>
+    /// </summary>
+    /// <param name="context">The <see cref="Context"/></param>
+    /// <returns></returns>
+    public static HttpRequestMessage? GetRequest(this Context context)
+    {
+        if (context.TryGetValue(RequestKey, out var request))
+        {
+            return request as HttpRequestMessage;
+        }
+        return null;
+    }
+
+    
+    /// <summary>
+    /// Sets the HttpClientName and RequestUri on the provided <see cref="Context"/>
+    /// </summary>
+    /// <param name="context">The <see cref="Context"/></param>
+    /// <param name="client">The <see cref="HttpClient"/></param>
+    /// <param name="request">The <see cref="HttpRequestMessage"/></param>
+    /// <returns></returns>
+    public static Context WithClientRequest(this Context context, HttpClient client, HttpRequestMessage request)
+    {
+        context[RequestKey] = request;
+
+        WithHttpClientName(context, client.GetType().Name);
+
+        if(client.BaseAddress == null && request.RequestUri == null)
+            return context;
+
+        if (client.BaseAddress == null)
+        {
+            WithRequestUri(context, request.RequestUri);
+            return context;
+        }
+
+        if (request.RequestUri == null)
+        {
+            WithRequestUri(context, client.BaseAddress);
+            return context;
+        }
+        WithRequestUri(context, new Uri(client.BaseAddress, request.RequestUri));
+        return context;
     }
 }
