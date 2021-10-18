@@ -5,6 +5,9 @@ using Polly;
 
 namespace Pol.Notifications;
 
+/// <summary>
+/// Notification that is sent when a circuit breaker opens
+/// </summary>
 public class CircuitBreakerOpenNotification : INotification
 {
     public Context Context { get; }
