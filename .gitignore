@@ -398,3 +398,4 @@ FodyWeavers.xsd
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio
 
 /Pol.sln.DotSettings
+/Pol.v3.ncrunchsolution

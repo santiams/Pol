@@ -11,7 +11,7 @@ namespace Pol;
 public static class PollyContextExtensions
 {
     private static readonly string MediatRKey = "MediatR";
-    private static readonly string HttpClientNameKey = "ServiceName";
+    private static readonly string TypedClientNameKey = "TypedClientName";
     private static readonly string RequestUriKey = "RequestUri";
     private static readonly string RequestKey = "Request";
 
@@ -23,7 +23,7 @@ public static class PollyContextExtensions
     /// <returns>The original <see cref="Context"/></returns>>
     public static Context WithMediator(this Context context, IMediator mediator)
     {
-        context[MediatRKey] = mediator;
+        context[MediatRKey] = mediator ?? throw new ArgumentNullException(nameof(mediator));
         return context;
     }
 
@@ -40,33 +40,33 @@ public static class PollyContextExtensions
         }
         return null;
     }
-    
+
     /// <summary>
     /// Adds the HttpClient name to the <see cref="Context"/>.  This is useful when logging events raised by Polly
     /// </summary>
     /// <param name="context">The <see cref="Context"/></param>
-    /// <param name="httpClientName">The HttpClient name</param>
+    /// <param name="typedClientName">The HttpClient name</param>
     /// <returns>The original <see cref="Context"/></returns>
-    private static Context WithHttpClientName(this Context context, string httpClientName)
+    private static Context WithTypedClientName(this Context context, string typedClientName)
     {
-        context[HttpClientNameKey] = httpClientName;
+        context[TypedClientNameKey] = typedClientName ?? throw new ArgumentNullException(nameof(typedClientName));
         return context;
     }
-        
+
     /// <summary>
     /// Returns the HttpClient name
     /// </summary>
     /// <param name="context">The <see cref="Context"/></param>
     /// <returns><see cref="string"/></returns>
-    public static string? GetHttpClientName(this Context context)
+    public static string? GetTypedClientName(this Context context)
     {
-        if (context.TryGetValue(HttpClientNameKey, out var serviceName))
+        if (context.TryGetValue(TypedClientNameKey, out var serviceName))
         {
             return serviceName as string;
         }
         return null;
     }
-    
+
     /// <summary>
     /// Adds the request uri to the <see cref="Context"/>.  This is useful when logging events raised by Polly
     /// </summary>
@@ -93,6 +93,12 @@ public static class PollyContextExtensions
         return null;
     }
 
+    private static Context WithRequest(this Context context, HttpRequestMessage request)
+    {
+        context[RequestKey] = request ?? throw new ArgumentNullException(nameof(request));
+        return context;
+    }
+
     /// <summary>
     /// The <see cref="HttpRequestMessage"/> that is associated with the <see cref="Context"/>
     /// </summary>
@@ -107,21 +113,25 @@ public static class PollyContextExtensions
         return null;
     }
 
-    
+
     /// <summary>
     /// Sets the HttpClientName and RequestUri on the provided <see cref="Context"/>
     /// </summary>
     /// <param name="context">The <see cref="Context"/></param>
+    /// <param name="typedClientName">The name of the Typed Client</param>
     /// <param name="client">The <see cref="HttpClient"/></param>
     /// <param name="request">The <see cref="HttpRequestMessage"/></param>
     /// <returns></returns>
-    public static Context WithClientRequest(this Context context, HttpClient client, HttpRequestMessage request)
+    public static Context WithClientRequest(this Context context, string typedClientName, HttpClient client, HttpRequestMessage request)
     {
-        context[RequestKey] = request;
+        WithTypedClientName(context, typedClientName);
+        if (client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+        WithRequest(context, request);
 
-        WithHttpClientName(context, client.GetType().Name);
-
-        if(client.BaseAddress == null && request.RequestUri == null)
+        if (client.BaseAddress == null && request.RequestUri == null)
             return context;
 
         if (client.BaseAddress == null)

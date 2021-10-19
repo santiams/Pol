@@ -84,7 +84,7 @@ public class MyHttpClient : IMyHttpClient
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "some-path/");
-            request.AddPolicyExecutionContext(_httpClient, _mediator);  // Creates a new Pol Context and attaches useful stuff
+            request.AddPolicyExecutionContext(nameof(MyHttpClient), _httpClient, _mediator);  // Creates a new Pol Context and attaches useful stuff
             using var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
         }
