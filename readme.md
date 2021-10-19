@@ -113,4 +113,43 @@ Each notification type contains the Polly `Context` (which will give you access 
 You'd typically use this to write a log message, notice an exception in New Relic etc when something goes bad.  Of course, it's MediatR, so you can set up as many handlers as you want in response to each notification.
 I would typically add a logging handler and New Relic handler for all events and a Slack message handler for circuit open events.
 
-The boy is about to wake up...To be continued
+### Example: Handling a TimeoutNotification
+Here's an example of how you might use the `TimeoutNotification` to write a log message:
+```csharp
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Pol;
+using Pol.Notifications;
+using TargetServiceClient.Logging;
+
+namespace TargetServiceClient.Mediator.Handlers.TimeoutHandlers
+{
+
+    public class LoggingTimeoutHandler : INotificationHandler<TimeoutNotification>
+    {
+        private readonly ILogger<LoggingTimeoutHandler> _logger;
+
+        public LoggingTimeoutHandler(ILogger<LoggingTimeoutHandler> logger)
+        {
+            _logger = logger;
+        }
+        public Task Handle(TimeoutNotification notification, CancellationToken cancellationToken)
+        {
+            _logger.PollyTimeoutPolicyInvoked(
+                notification.Context.GetHttpClientName(),   // This helper method is available on Context for all notification types
+                notification.Timeout,                       // The timespan representing the timeout that triggered this notification
+                notification.Context.GetRequestUri(),       // This helper method is available on Context for all notification types
+                notification.Exception);                    // The exception that was caught
+
+            return Unit.Task;                               // Standard return pattern for MediatR NotificationHandler
+        }
+    }
+}
+```
+
+This is just a standard MediatR `INotificationHandler<T>` that uses the properties in the `TimeoutNotification` send a log message.
+You don't have to register this type (assuming that it is in the same assembly as your `Startup.cs`) - MediatR will register it automagically.
+
+And, of course, you're free to add as many `NotificationHandler`s as you wish for each notification type.  So you might log as above, then add a separate handler to log the exception to New Relic and (in the case of a Circuit Breaker when you really want immediate notification that a circuit is open), add yet another handler that sends a message to a Slack channel.
