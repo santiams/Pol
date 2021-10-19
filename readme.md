@@ -4,7 +4,7 @@
 
 Pol is so called because it's [Polly](https://github.com/App-vNext/Polly) with bits missing.
 
-It's an opinionated take on Polly in that it deals with only a subset of Polly's excellent resilience strategies - specifically it's aimed at resilience for named `HttpClient`s configured via Microsofts `HttpClientFactory`.
+It's an opinionated take on Polly in that it deals with only a subset of Polly's excellent resilience strategies - specifically it's aimed at resilience for named `HttpClient`s configured via Microsoft's `HttpClientFactory`.
 
 What's unique is that it offers a simple and flexible way to manage what happens when any configured policies kick in.
 
@@ -30,7 +30,7 @@ services.AddMediatR(typeof(Startup))
 ```
 
 ## Configuring HttpClient calls
-Currently only a subset of resilience strategies are included and there is no inbuilt support for PolicyRegistry
+Currently only a subset of resilience strategies are included and there is no in-built support for PolicyRegistry
 
 * TimeoutAsync
 * RetryAsync
