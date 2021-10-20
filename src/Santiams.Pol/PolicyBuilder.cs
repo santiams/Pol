@@ -16,9 +16,6 @@ public static class PolicyBuilder
         {
             var retVal = cancelledTask ?? Task.CompletedTask;
 
-            if(exception?.GetType() == typeof(TaskCanceledException))
-                return retVal;
-            
             var mediator = context.GetMediator();
 
             mediator?.Publish(new TimeoutNotification(context, timespan, exception));
