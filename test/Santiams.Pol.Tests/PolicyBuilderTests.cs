@@ -9,9 +9,8 @@ using Pol.Notifications;
 using Polly;
 using Polly.Timeout;
 using Xunit;
-using PolicyBuilder = Pol.PolicyBuilder;
 
-namespace Santiams.Pol.Tests
+namespace Pol.Tests
 {
     public class PolicyBuilderTests
     {

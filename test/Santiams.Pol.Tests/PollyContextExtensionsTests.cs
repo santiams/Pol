@@ -3,11 +3,10 @@ using System.Net.Http;
 using FluentAssertions;
 using MediatR;
 using Moq;
-using Pol;
 using Polly;
 using Xunit;
 
-namespace Santiams.Pol.Tests
+namespace Pol.Tests
 {
     public class PollyContextExtensionsTests
     {
