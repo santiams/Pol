@@ -14,6 +14,8 @@ namespace Pol.Tests
 {
     public class PolicyBuilderTests
     {
+        // TimeoutPolicy
+
         [Fact]
         public void TimeoutPolicy_Success_CreatesAnAsyncTimeoutPolicy()
         {
@@ -47,6 +49,27 @@ namespace Pol.Tests
 
             Mock.Get(mediator).Verify(m=>m.Publish(
                 It.Is<TimeoutNotification>(tn => isMatch(tn)), It.IsAny<CancellationToken>()));
+        }
+
+        [Fact]
+        public async Task TimeoutPolicy_Success_DoesNotFailIfMediatorNotConfiguredInContext()
+        {
+            var ts = TimeSpan.FromMilliseconds(50);
+            var context = Mock.Of<Context>();
+            
+            var policy = PolicyBuilder.TimeoutPolicy(ts);
+            
+            var thrown = await Assert.ThrowsAsync<TimeoutRejectedException>(()=>policy.ExecuteAsync(async (ctx, token) =>
+            {
+                await Task.Delay((int)ts.TotalMilliseconds + 100, token);
+                return new HttpResponseMessage();
+            }, context, CancellationToken.None));
+        }
+
+        // RetryPolicy
+        public async Task RetryPolicy_Success_CreatesAnAsyncRetryPolicy()
+        {
+            new TimeoutRejectedException();
         }
     }
 }

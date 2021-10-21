@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using MediatR;
 using Pol.Notifications;
 using Polly;
 using Polly.Extensions.Http;
@@ -10,6 +11,11 @@ namespace Pol;
 
 public static class PolicyBuilder
 {
+    /// <summary>
+    /// Builds an <see cref="AsyncTimeoutPolicy{TResult}"/> which publishes a <see cref="TimeoutNotification"/> to <see cref="IMediator"/> on timeout.
+    /// </summary>
+    /// <param name="timeout">The amount of time to wait before timing out</param>
+    /// <returns>The <see cref="AsyncTimeoutPolicy{TResult}"/> instance</returns>
     public static IAsyncPolicy<HttpResponseMessage> TimeoutPolicy(TimeSpan timeout)
     {
         Task OnTimeout(Context context, TimeSpan timespan, Task? cancelledTask, Exception? exception)
@@ -103,7 +109,6 @@ public static class PolicyBuilder
     private static PolicyBuilder<HttpResponseMessage> StandardErrorHandlingPolicyBuilder()
     {
         return HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .Or<TimeoutRejectedException>();
+            .HandleTransientHttpError();
     }
 }
