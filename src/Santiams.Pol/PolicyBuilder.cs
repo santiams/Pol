@@ -92,6 +92,7 @@ public static class PolicyBuilder
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TaskCanceledException>()
-            .Or<OperationCanceledException>();
+            .Or<OperationCanceledException>()
+            .Or<TimeoutRejectedException>();
     }
 }
