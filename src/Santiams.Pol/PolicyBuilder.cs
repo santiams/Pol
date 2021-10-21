@@ -90,6 +90,8 @@ public static class PolicyBuilder
     private static PolicyBuilder<HttpResponseMessage> StandardErrorHandlingPolicyBuilder()
     {
         return HttpPolicyExtensions
-            .HandleTransientHttpError();
+            .HandleTransientHttpError()
+            .Or<TaskCanceledException>()
+            .Or<OperationCanceledException>();
     }
 }
