@@ -21,7 +21,7 @@ public static class PolicyBuilder
         Task OnTimeout(Context context, TimeSpan timespan, Task? cancelledTask, Exception? exception)
         {
             var retVal = cancelledTask ?? Task.CompletedTask;
-
+            
             var mediator = context.GetMediator();
 
             mediator?.Publish(new TimeoutNotification(context, timespan, exception));
@@ -36,6 +36,11 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, int retryAttempt, Context context)
         {
+            if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
+            {
+                return;
+            }
+
             var mediator = context.GetMediator();
                 
             mediator?.Publish(new RetryNotification(context, result, retryAttempt, retryCount));
@@ -49,6 +54,11 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, TimeSpan sleepDuration, int retryAttempt, Context context)
         {
+            if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
+            {
+                return;
+            }
+
             var mediator = context.GetMediator();
             mediator?.Publish(new RetryNotification(context, result, retryAttempt, retryCount, sleepDuration));
         }
@@ -60,6 +70,11 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, int retryAttempt, Context context)
         {
+            if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
+            {
+                return;
+            }
+
             var mediator = context.GetMediator();
             mediator?.Publish(new RetryNotification(context, result, retryAttempt));
         }
@@ -72,9 +87,13 @@ public static class PolicyBuilder
     {
         void OnBreak(DelegateResult<HttpResponseMessage> result, TimeSpan durationOfBreak, Context context)
         {
+            if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
+            {
+                return;
+            }
+
             var mediator = context.GetMediator();
             mediator?.Publish(new CircuitBreakerOpenNotification(context, result, durationOfBreak));
-
         }
 
         void OnReset(Context context)
@@ -91,8 +110,6 @@ public static class PolicyBuilder
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
-            .Or<TaskCanceledException>()
-            .Or<OperationCanceledException>()
             .Or<TimeoutRejectedException>();
     }
 }
