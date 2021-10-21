@@ -2,6 +2,11 @@
 
 [![.NET](https://github.com/santiams/Pol/actions/workflows/dotnet.yml/badge.svg)](https://github.com/santiams/Pol/actions/workflows/dotnet.yml)
 
+# Warning!
+This project is very much a work in progress and is subject to breaking changes without notice.  In short, if version is less than 1.0.0 consider it unstable!
+
+# Overview
+
 Pol is so called because it's [Polly](https://github.com/App-vNext/Polly) with bits missing.
 
 It's an opinionated take on Polly in that it deals with only a subset of Polly's excellent resilience strategies - specifically it's aimed at resilience for named `HttpClient`s configured via Microsoft's `HttpClientFactory`.
