@@ -36,11 +36,6 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, int retryAttempt, Context context)
         {
-            if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
-            {
-                return;
-            }
-            
             var mediator = context.GetMediator();
                 
             mediator?.Publish(new RetryNotification(context, result, retryAttempt, retryCount));
@@ -54,11 +49,6 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, TimeSpan sleepDuration, int retryAttempt, Context context)
         {
-            if (result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
-            {
-                return;
-            }
-
             var mediator = context.GetMediator();
             mediator?.Publish(new RetryNotification(context, result, retryAttempt, retryCount, sleepDuration));
         }
@@ -70,11 +60,6 @@ public static class PolicyBuilder
     {
         void OnRetry(DelegateResult<HttpResponseMessage> result, int retryAttempt, Context context)
         {
-            if (result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
-            {
-                return;
-            }
-
             var mediator = context.GetMediator();
             mediator?.Publish(new RetryNotification(context, result, retryAttempt));
         }
@@ -87,10 +72,6 @@ public static class PolicyBuilder
     {
         void OnBreak(DelegateResult<HttpResponseMessage> result, TimeSpan durationOfBreak, Context context)
         {
-            if (result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
-            {
-                return;
-            }
             var mediator = context.GetMediator();
             mediator?.Publish(new CircuitBreakerOpenNotification(context, result, durationOfBreak));
 
