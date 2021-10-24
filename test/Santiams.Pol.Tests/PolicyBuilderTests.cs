@@ -8,6 +8,7 @@ using MediatR;
 using Moq;
 using Pol.Notifications;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
 using Xunit;
@@ -214,6 +215,95 @@ namespace Pol.Tests
                         throw new TimeoutRejectedException("oops");
                     return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
                 }, context, CancellationToken.None);
+        }
+
+        // CircuitBreakerPolicy
+        [Fact]
+        public void CircuitBreakerPolicy_Success_CreatesAnAsyncCircuitBreakerPolicy()
+        {
+            var sut = PolicyBuilder.CircuitBreakerPolicy(1, TimeSpan.FromMilliseconds(1));
+            sut.Should().NotBeNull();
+            sut.Should().BeOfType<AsyncCircuitBreakerPolicy<HttpResponseMessage>>();
+        }
+
+        [Fact]
+        public async Task CircuitBreakerPolicy_Success_CallsMediatorWithCorrectNotificationOnBreak_Exception()
+        {
+            var mediator = Mock.Of<IMediator>();
+            var context = new Context
+            {
+                ["MediatR"] = mediator
+            };
+            var durationOfBreak = TimeSpan.FromMilliseconds(100);
+            var exception = new HttpRequestException("Bad Gateway", null, HttpStatusCode.BadGateway);
+
+            var sut = PolicyBuilder.CircuitBreakerPolicy(1, durationOfBreak);
+
+            Func<CircuitBreakerOpenNotification, bool> isMatch = n => 
+                n.Context == context &&
+                n.DurationOfBreak == durationOfBreak &&
+                n.Result.Exception == exception;
+
+            Task<HttpResponseMessage> Thrower(Context c) => throw exception;
+
+            await Assert.ThrowsAsync<HttpRequestException>(()=>sut.ExecuteAsync(Thrower, context));
+            await Assert.ThrowsAsync<BrokenCircuitException>(()=>sut.ExecuteAsync(Thrower, context));
+
+            Mock.Get(mediator).Verify(m=>m.Publish(It.Is<CircuitBreakerOpenNotification>(v=>isMatch(v)),It.IsAny<CancellationToken>()));
+        }
+
+        [Fact]
+        public async Task CircuitBreakerPolicy_Success_CallsMediatorWithCorrectNotificationOnBreak_HttpResponse()
+        {
+            var mediator = Mock.Of<IMediator>();
+            var context = new Context
+            {
+                ["MediatR"] = mediator
+            };
+            var durationOfBreak = TimeSpan.FromMilliseconds(100);
+            var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+
+            var sut = PolicyBuilder.CircuitBreakerPolicy(1, durationOfBreak);
+
+            Func<CircuitBreakerOpenNotification, bool> isMatch = n =>
+                n.Context == context &&
+                n.DurationOfBreak == durationOfBreak &&
+                n.Result.Result == response;
+
+            Task<HttpResponseMessage> Responder (Context c) => Task.FromResult(response); 
+            
+            await sut.ExecuteAsync(Responder, context);
+            await Assert.ThrowsAsync<BrokenCircuitException<HttpResponseMessage>>(()=>sut.ExecuteAsync(Responder, context));
+
+            Mock.Get(mediator).Verify(
+                m=>m.Publish(
+                    It.Is<CircuitBreakerOpenNotification>(v=>isMatch(v)),
+                    It.IsAny<CancellationToken>()));
+        }
+        
+        [Fact]
+        public async Task CircuitBreakerPolicy_Success_CallsMediatorWithCorrectNotificationOnReset()
+        {
+            var mediator = Mock.Of<IMediator>();
+            var context = new Context
+            {
+                ["MediatR"] = mediator
+            };
+            var durationOfBreak = TimeSpan.FromMilliseconds(100);
+            var exception = new HttpRequestException("Bad Gateway", null, HttpStatusCode.BadGateway);
+
+            var sut = PolicyBuilder.CircuitBreakerPolicy(1, durationOfBreak);
+            
+            Task<HttpResponseMessage> Thrower(Context c) => throw exception;
+            Task<HttpResponseMessage> Responder(Context c) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+
+            await Assert.ThrowsAsync<HttpRequestException>(()=>sut.ExecuteAsync(Thrower, context));
+            await Assert.ThrowsAsync<BrokenCircuitException>(()=>sut.ExecuteAsync(Thrower, context));
+            await Task.Delay(durationOfBreak.Add(TimeSpan.FromMilliseconds(5)));
+            await sut.ExecuteAsync(Responder, context);
+            await sut.ExecuteAsync(Responder, context);
+
+            Mock.Get(mediator).Verify(m=>m.Publish(It.IsAny<CircuitBreakerResetNotification>(),It.IsAny<CancellationToken>()));
         }
     }
 }

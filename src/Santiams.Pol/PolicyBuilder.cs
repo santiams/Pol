@@ -4,12 +4,16 @@ using System.Threading.Tasks;
 using MediatR;
 using Pol.Notifications;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Retry;
 using Polly.Timeout;
 
 namespace Pol;
 
+/// <summary>
+/// Helper class which provides methods for creating supported Polly policies
+/// </summary>
 public static class PolicyBuilder
 {
     /// <summary>
@@ -99,10 +103,15 @@ public static class PolicyBuilder
             .RetryForeverAsync(OnRetry);
     }
     
-    
+    /// <summary>
+    /// Configures a <see cref="AsyncCircuitBreakerPolicy{TResult}"/> publishing a <see cref="CircuitBreakerOpenNotification"/> when the circuit opens and a <see cref="CircuitBreakerResetNotification"/> on reset.
+    /// </summary>
+    /// <param name="handledEventsAllowedBeforeBreaking">The number of faults before the circuit breakers</param>
+    /// <param name="durationOfBreak">How long the circuit should stay open for after breaking</param>
+    /// <returns></returns>
     public static IAsyncPolicy<HttpResponseMessage> CircuitBreakerPolicy(int handledEventsAllowedBeforeBreaking, TimeSpan durationOfBreak)
     {
-        void OnBreak(DelegateResult<HttpResponseMessage> result, TimeSpan durationOfBreak, Context context)
+        void OnBreak(DelegateResult<HttpResponseMessage> result, TimeSpan duration, Context context)
         {
             if(result.Exception?.InnerException?.GetType() == typeof(TaskCanceledException))
             {
@@ -110,7 +119,7 @@ public static class PolicyBuilder
             }
 
             var mediator = context.GetMediator();
-            mediator?.Publish(new CircuitBreakerOpenNotification(context, result, durationOfBreak));
+            mediator?.Publish(new CircuitBreakerOpenNotification(context, result, duration));
         }
 
         void OnReset(Context context)
