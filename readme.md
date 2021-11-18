@@ -59,7 +59,7 @@ public static IServiceCollection ConfigureMyHttpClient(this IServiceCollection s
             // HttpClient configuration goes here
         })
         .AddPolicyHandler(PolicyBuilder.RetryPolicy(3))                                     // Configure policy to retry up to 3 times
-        .AddPolicyHandler(PolicyBuilder.CircuitBreaker(10, TimeSpan.FromSeconds(3)))        // Break after 10 failures, stay open for 3 seconds
+        .AddPolicyHandler(PolicyBuilder.CircuitBreakerPolicy(10, TimeSpan.FromSeconds(3)))  // Break after 10 failures, stay open for 3 seconds
         .AddPolicyHandler(PolicyBuilder.TimeoutPolicy(TimeSpan.FromMilliseconds(300)));     // Timeout after 300ms
 
     return services;
