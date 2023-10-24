@@ -31,4 +31,4 @@ jobs:
     - name: Pack
       run: dotnet pack src/Santiams.Pol/Santiams.Pol.csproj --output nuget-packages --configuration Release
     - name: Push
-      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json  --api-key ${{secrets.POL_NUGET_PACKAGE_KEY}}
+      run: dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json  --api-key ${{secrets.POL_NUGET_PACKAGE_KEY_2}}
