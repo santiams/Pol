@@ -21,7 +21,7 @@ jobs:
         include-prerelease: true
         source-url: https://api.nuget.org/v3/index.json
       env:
-        NUGET_AUTH_TOKEN: ${{secrets.POL_NUGET_PACKAGE_KEY}}
+        NUGET_AUTH_TOKEN: ${{secrets.POL_NUGET_PACKAGE_KEY_2}}
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
